@@ -9,12 +9,18 @@ export default class {
      * @param {Number} height
      */
     constructor (width, height) {
+
         this.width = width;
         this.height = height;
+
+        this.packedRectangles = [];
+        this.gaps = new Array(this.width).fill(0);
+        this.cursorX = 0;
     }
 
 
     /**
+     * Fits rectangle using the Burke algorithm
      *
      * @param {Rectangle[]} rectangles
      * @return {Rectangle[]}
@@ -23,15 +29,7 @@ export default class {
 
         const
             unpackedRectangles = rectangles.slice(),
-            packedRectangles = [],
-			unfitRectangles = [],
-            gaps = new Array(this.width).fill(0);
-
-        let minGap,
-            gapWidth,
-            xOffset = 0,
-            lowest,
-            k = 0;
+			unfitRectangles = [];
 
         unpackedRectangles.sort((r1, r2) => {
         	return r1.height - r2.height || r2.width - r1.width;
@@ -39,96 +37,148 @@ export default class {
 
         while (unpackedRectangles.length) {
 
-        	let i = 0;
-
-            if (k++ > 10000) {
-				console.log(unpackedRectangles.length);
-				console.error("While overload");
-				return;
-			}
-
             // Find the lowest gap
-			minGap = gaps[0];
+			let gap = this.findLowestGap();
 
-			xOffset = 0;
-
-			for (i = 0; i < gaps.length; i++) {
-				if (gaps[i] < minGap) {
-					minGap = gaps[i];
-					xOffset = i;
-				}
-			}
-
-			i = xOffset + 1;
-			gapWidth = 1;
-
-			// Finding the gap width
-			while (i < gaps.length && gaps[i] === gaps[i - 1]) {
-				gapWidth += 1;
-				i += 1;
-			}
+            // Move to the gap
+			this.cursorX = gap.posX;
 
 			// Find the best fitting for pack rectangle
-
-			let rectangleToFit,
-				maxFitIndex = 0;
-
-			unpackedRectangles.forEach(rectangle => {
-
-				const fitIndex = rectangle.width / gapWidth;
-
-				if (fitIndex <= 1 && fitIndex >= maxFitIndex) {
-					maxFitIndex = fitIndex;
-					rectangleToFit = rectangle;
-				}
-
-			});
+			let rectangleToFit = this.findBestFittingRectangle(unpackedRectangles, gap.width);
 
 			if (rectangleToFit) {
 
+			    // Remove rectangle from unpackedRectangles
 				unpackedRectangles.splice(unpackedRectangles.indexOf(rectangleToFit), 1);
 
-                // Place best fitting rectangle using placement policy "Leftmost"
-
-				if (rectangleToFit.height + gaps[xOffset] > this.height) {
+				// Check if container's height is not exceeded
+				if (rectangleToFit.height + this.gaps[this.cursorX] > this.height) {
 					unfitRectangles.push(rectangleToFit);
 				} else {
-
-					rectangleToFit.left = xOffset;
-					rectangleToFit.top = gaps[xOffset];
-
-					// Raise elements of array to appropriate height
-					for (let j = xOffset; j < xOffset + rectangleToFit.width; j++) {
-						gaps[j] += rectangleToFit.height;
-					}
-
-					packedRectangles.push(rectangleToFit);
-
+					this.placeRectangle(rectangleToFit);
 				}
 
             } else {
 
-			    // Raise gap to height of the lowest neighbour
-				if (xOffset === 0) {
-					lowest = gaps[gapWidth];
-				} else if (xOffset + gapWidth === gaps.length) {
-					lowest = gaps[gaps.length - gapWidth - 1];
-				} else if (gaps[xOffset - 1] <= gaps[xOffset + gapWidth]) {
-					lowest = gaps[xOffset - 1];
-				} else {
-					lowest = gaps[xOffset + gapWidth];
-				}
-
-				for (let j = xOffset; j < xOffset + gapWidth; j++) {
-					gaps[j] = lowest;
-				}
+			    this.raiseGapsToLowestGapNeighbour(gap);
 
             }
 
         }
 
-        return packedRectangles;
+        return this.packedRectangles;
 
+    }
+
+
+    /**
+     * Places a rectangle into the gap
+     *
+     * @param {Rectangle} rectangle
+     */
+    placeRectangle (rectangle) {
+
+        rectangle.left = this.cursorX;
+        rectangle.top = this.gaps[this.cursorX];
+
+        // Raise elements of array to appropriate height
+        for (let i = this.cursorX; i < this.cursorX + rectangle.width; i++) {
+            this.gaps[i] += rectangle.height;
+        }
+
+        this.packedRectangles.push(rectangle);
+
+    }
+
+
+    /**
+     * Finds a lowest gap
+     *
+     * @return {{posX: number, width: number}}
+     */
+    findLowestGap () {
+
+        let
+            height = this.gaps[0],
+            cursorX = 0,
+            width = 1;
+
+        for (let i = 0; i < this.gaps.length; i++) {
+            if (this.gaps[i] < height) {
+                height = this.gaps[i];
+                cursorX = i;
+            }
+        }
+
+        let i = cursorX + 1;
+
+        // Finding the gap width
+        while (i < this.gaps.length && this.gaps[i] === this.gaps[i - 1]) {
+            width += 1;
+            i += 1;
+        }
+
+        return {
+            posX: cursorX,
+            width: width
+        };
+
+    }
+
+
+    /**
+     *
+     * Finds a best fitting rectangle - with rectangle.width / gapWidth ratio close to 1
+     *
+     * @param {Rectangle[]} unpackedRectangles
+     * @param {Number} gapWidth
+     * @return {Rectangle|null}
+     */
+    findBestFittingRectangle (unpackedRectangles, gapWidth) {
+
+        let rectangleToFit = null,
+            maxFitIndex = 0;
+
+        unpackedRectangles.forEach(rectangle => {
+
+            const fitIndex = rectangle.width / gapWidth;
+
+            if (fitIndex <= 1 && fitIndex >= maxFitIndex) {
+                maxFitIndex = fitIndex;
+                rectangleToFit = rectangle;
+            }
+
+        });
+
+        return rectangleToFit;
+
+    }
+
+
+    /**
+     * Raise gap to the level of the next lowest gap
+     * 
+     * @param {Object} gap
+     */
+    raiseGapsToLowestGapNeighbour (gap) {
+        
+        let lowest;
+
+        // Raise gap to height of the lowest neighbour
+        if (this.cursorX === 0) {
+            lowest = this.gaps[gap.width];
+        } else if (this.cursorX + gap.width === this.gaps.length) {
+            lowest = this.gaps[this.gaps.length - gap.width - 1];
+        } else if (this.gaps[this.cursorX - 1] <= this.gaps[this.cursorX + gap.width]) {
+            lowest = this.gaps[this.cursorX - 1];
+        } else {
+            lowest = this.gaps[this.cursorX + gap.width];
+        }
+
+        for (let i = this.cursorX; i < this.cursorX + gap.width; i++) {
+            this.gaps[i] = lowest;
+        }
+        
     }
 
 }
