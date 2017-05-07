@@ -1,0 +1,47 @@
+.b-container {
+    border: 1px solid #ccc;
+    margin: 0 auto;
+    position: relative;
+}
+
+.b-listing {
+    position: absolute;
+    border: 2px solid #fff;
+    box-sizing: border-box;
+    color: #fff;
+    display: flex;
+}
+
+.b-listing::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,.3);
+}
+
+.b-listing__title {
+    padding: 0;
+    position: relative;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    align-self: center;
+    margin: auto;
+    text-align: center;
+}
+
+.b-listing.m-size_x-small .b-listing__title {
+    font-size: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.b-listing.m-size_small .b-listing__title {
+    font-size: 14px;
+}
+
+.b-listing.m-size_large .b-listing__title {
+    font-size: 18px;
+}
