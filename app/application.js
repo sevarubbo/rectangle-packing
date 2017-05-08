@@ -30,46 +30,28 @@ export default class {
      * @return {Boolean}
      */
     get shouldRandomGenerate () {
-        return this.getURLParam("random") !== null;
-    }
-
-
-    /**
-     * A hooks that's triggered when DOM is ready
-     */
-    onDOMReady () {
-
-        // Draw a container first
-        this.drawContainer(this.container);
-
-        // Wait for listings to resolve
-        this.listingsPromise.then(listings => {
-
-            // Rearrange listings' rectangles
-            const
-                listingRectangles = listings.map(listing => listing.rectangle),
-                arrangedRectangles = this.container.arrangeRectangles(listingRectangles),
-                arrangedListings = listings.filter(listing => arrangedRectangles.includes(listing.rectangle));
-
-            // Draw listings
-            this.drawListings(arrangedListings);
-
-        });
-
+        return this.getURLParam("source") === "random";
     }
 
 
     /**
      *
-     * @param {Container} container
      */
-    drawContainer (container) {
+    get generatedListings () {
 
-        const $container = (new ContainerView(container)).render();
+        return Array.apply(null, new Array(40)).map(() => {
 
-        $("body").append($container);
+            const
+                width = 32 * Math.ceil(Math.random() * 8),
+                height = 32 * Math.ceil(Math.random() * 8);
 
-        this.$container = $container;
+            return new Listing({
+                title: `Listing ${width}x${height}`,
+                rectangle: new Rectangle(width, height),
+                image: `http://lorempixel.com/${width}/${height}`
+            });
+
+        });
 
     }
 
@@ -109,17 +91,53 @@ export default class {
     }
 
 
+
+    /**
+     * Hooks
+     */
+
+    /**
+     * A hooks that's triggered when DOM is ready
+     */
+    onDOMReady () {
+
+        // Draw a container first
+        this.drawContainer(this.container);
+
+        // Wait for listings to resolve
+        this.listingsPromise.then(listings => {
+
+            const
+                arrangedListings = this.arrangeListings(listings),
+                unfitListings = listings.filter(listing => !arrangedListings.includes(listing));
+
+            // Draw arranged listings
+            this.renderListings(arrangedListings);
+
+            // Draw listings that did not fit
+            this.renderUnfitListings(unfitListings);
+
+        });
+
+    }
+
+
+
+    /**
+     * Methods
+     */
+
     /**
      *
+     * @param {Container} container
      */
-    get generatedListings () {
+    drawContainer (container) {
 
-        return new Array(50).fill(1).map(() => new Listing({
-            rectangle : new Rectangle(
-                32 * Math.ceil(Math.random() * 8),
-                32 * Math.ceil(Math.random() * 8)
-            )
-        }));
+        const $container = (new ContainerView(container)).render();
+
+        $("body").prepend($container);
+
+        this.$container = $container;
 
     }
 
@@ -128,7 +146,22 @@ export default class {
      *
      * @param {Listing[]} listings
      */
-    drawListings (listings) {
+    arrangeListings (listings) {
+
+        const
+            listingRectangles = listings.map(listing => listing.rectangle),
+            arrangedRectangles = this.container.arrangeRectangles(listingRectangles);
+
+        return listings.filter(listing => arrangedRectangles.includes(listing.rectangle));
+
+    }
+
+
+    /**
+     *
+     * @param {Listing[]} listings
+     */
+    renderListings (listings) {
 
         const
             $listings = listings.map(listing => {
@@ -136,6 +169,23 @@ export default class {
             });
 
         this.$container.html($listings);
+
+    }
+
+
+    /**
+     *
+     * @param {Listing[]} listings
+     */
+    renderUnfitListings (listings) {
+
+        const
+            $listings = listings.map(listing => {
+                return (new ListingView(listing)).render();
+            });
+
+        $(".b-unfit-listings").append($listings);
+
     }
 
 

@@ -27,9 +27,7 @@ export default class {
      */
     arrangeRectangles (rectangles) {
 
-        const
-            unpackedRectangles = rectangles.slice(),
-			unfitRectangles = [];
+        const unpackedRectangles = rectangles.slice();
 
         unpackedRectangles.sort((r1, r2) => {
         	return r1.height - r2.height || r2.width - r1.width;
@@ -52,9 +50,7 @@ export default class {
 				unpackedRectangles.splice(unpackedRectangles.indexOf(rectangleToFit), 1);
 
 				// Check if container's height is not exceeded
-				if (rectangleToFit.height + this.gaps[this.cursorX] > this.height) {
-					unfitRectangles.push(rectangleToFit);
-				} else {
+				if (rectangleToFit.height + this.gaps[this.cursorX] <= this.height) {
 					this.placeRectangle(rectangleToFit);
 				}
 
@@ -101,16 +97,17 @@ export default class {
         let
             height = this.gaps[0],
             cursorX = 0,
-            width = 1;
+            width = 1,
+            i;
 
-        for (let i = 0; i < this.gaps.length; i++) {
+        for (i = 0; i < this.gaps.length; i++) {
             if (this.gaps[i] < height) {
                 height = this.gaps[i];
                 cursorX = i;
             }
         }
 
-        let i = cursorX + 1;
+        i = cursorX + 1;
 
         // Finding the gap width
         while (i < this.gaps.length && this.gaps[i] === this.gaps[i - 1]) {
@@ -168,7 +165,7 @@ export default class {
         if (this.cursorX === 0) {
             lowest = this.gaps[gap.width];
         } else if (this.cursorX + gap.width === this.gaps.length) {
-            lowest = this.gaps[this.gaps.length - gap.width - 1];
+            lowest = this.gaps[this.cursorX - 1];
         } else if (this.gaps[this.cursorX - 1] <= this.gaps[this.cursorX + gap.width]) {
             lowest = this.gaps[this.cursorX - 1];
         } else {

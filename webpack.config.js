@@ -1,5 +1,6 @@
 const
-    path = require("path");
+    path = require("path"),
+    UglifyJsPlugin = require("webpack-uglify-js-plugin");
 
 module.exports = {
     entry: "./app/index.js",
@@ -28,6 +29,9 @@ module.exports = {
             }
         ]
     },
-    plugins: [],
-    watch: true
+    plugins: [
+        new UglifyJsPlugin({
+            cacheFolder: path.resolve(__dirname, "dist"),
+        })
+    ]
 };

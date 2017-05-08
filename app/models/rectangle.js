@@ -11,8 +11,8 @@ export default class {
     constructor (width, height) {
         this.width = width;
         this.height = height;
-        this.top = -10;
-        this.left = -10;
+        this.top = 0;
+        this.left = 0;
     }
 
 }
