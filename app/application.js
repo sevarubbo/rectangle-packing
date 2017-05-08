@@ -35,7 +35,7 @@ export default class {
 
 
     /**
-     *
+     * @return {Listing[]}
      */
     get generatedListings () {
 

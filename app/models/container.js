@@ -30,33 +30,33 @@ export default class {
         const unpackedRectangles = rectangles.slice();
 
         unpackedRectangles.sort((r1, r2) => {
-        	return r1.height - r2.height || r2.width - r1.width;
-		});
+            return r1.height - r2.height || r2.width - r1.width;
+        });
 
         while (unpackedRectangles.length) {
 
             // Find the lowest gap
-			let gap = this.findLowestGap();
+            let gap = this.findLowestGap();
 
             // Move to the gap
-			this.cursorX = gap.posX;
+            this.cursorX = gap.posX;
 
-			// Find the best fitting for pack rectangle
-			let rectangleToFit = this.findBestFittingRectangle(unpackedRectangles, gap.width);
+            // Find the best fitting for pack rectangle
+            let rectangleToFit = this.findBestFittingRectangle(unpackedRectangles, gap.width);
 
-			if (rectangleToFit) {
+            if (rectangleToFit) {
 
-			    // Remove rectangle from unpackedRectangles
-				unpackedRectangles.splice(unpackedRectangles.indexOf(rectangleToFit), 1);
+                // Remove rectangle from unpackedRectangles
+                unpackedRectangles.splice(unpackedRectangles.indexOf(rectangleToFit), 1);
 
-				// Check if container's height is not exceeded
-				if (rectangleToFit.height + this.gaps[this.cursorX] <= this.height) {
-					this.placeRectangle(rectangleToFit);
-				}
+                // Check if container's height is not exceeded
+                if (rectangleToFit.height + this.gaps[this.cursorX] <= this.height) {
+                    this.placeRectangle(rectangleToFit);
+                }
 
             } else {
 
-			    this.raiseGapsToLowestGapNeighbour(gap);
+                this.raiseGapsToLowestGapNeighbour(gap);
 
             }
 
@@ -92,7 +92,7 @@ export default class {
      *
      * @return {{posX: number, width: number}}
      */
-    findLowestGap () {
+    findLowestGap() {
 
         let
             height = this.gaps[0],
@@ -154,11 +154,11 @@ export default class {
 
     /**
      * Raise gap to the level of the next lowest gap
-     * 
+     *
      * @param {Object} gap
      */
     raiseGapsToLowestGapNeighbour (gap) {
-        
+
         let lowest;
 
         // Raise gap to height of the lowest neighbour
@@ -175,7 +175,7 @@ export default class {
         for (let i = this.cursorX; i < this.cursorX + gap.width; i++) {
             this.gaps[i] = lowest;
         }
-        
+
     }
 
 }
